@@ -1,0 +1,15 @@
+# dependencies: rebuilt from package-lock.json by npm ci, never committed
+node_modules/
+
+# wrangler's local state: the simulated KV store and caches from `wrangler dev`
+.wrangler/
+
+# local secrets for `wrangler dev` (see .dev.vars.example)
+.dev.vars
+
+# logs and OS noise
+*.log
+.DS_Store
+
+# output of `npm run deploy:dry-run`
+dist/

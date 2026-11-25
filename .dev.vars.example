@@ -1,0 +1,3 @@
+# copy this file to .dev.vars and put your real Pokémon TCG API key in it.
+# .dev.vars is gitignored; `wrangler dev` reads it as the Worker's local secrets.
+TCG_API_KEY="your-api-key-here"
