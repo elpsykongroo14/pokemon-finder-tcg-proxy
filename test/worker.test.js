@@ -74,10 +74,18 @@ describe("CORS", () => {
     expect(res.headers.get("Access-Control-Allow-Origin")).toBe(preview);
   });
 
+  it("allows the ui-rehaul branch preview through the pattern", async () => {
+    const branch = "https://ui-rehaul.pokemon-finder-react-b8o.pages.dev";
+    const res = await worker.fetch(makeRequest({ origin: branch }), makeEnv());
+
+    expect(res.headers.get("Access-Control-Allow-Origin")).toBe(branch);
+  });
+
   it.each([
     "https://evil.example",
     "https://pokemon-finder-react-b8o.pages.dev.evil.com",
     "http://pokemon-finder-react-b8o.pages.dev",
+    "https://pokemon-finder-5wx.pages.dev",
   ])("gives no permission to %s", async (origin) => {
     const res = await worker.fetch(makeRequest({ origin }), makeEnv());
 

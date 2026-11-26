@@ -3,11 +3,12 @@
 //the TCG API key lives here as a secret, not in code
 
 //This is the one piece of hardcoded truth everything else in the file will refer back to:
+//local development only. the deployed React app (production and every
+//preview, ui-rehaul included) is allowed by ALLOWED_ORIGIN_PATTERN below.
+//the vanilla app's origin was removed when that site was taken down (Nov 2026).
 const ALLOWED_ORIGINS = [
-  "https://pokemon-finder-5wx.pages.dev",
-  "http://localhost:5173",
-  "http://localhost:4173",
-  "https://ui-rehaul.pokemon-finder-react-b8o.pages.dev",
+  "http://localhost:5173", //vite dev server
+  "http://localhost:4173", //vite preview, used by the React app's Playwright tests
 ];
 
 //the React app on Cloudflare Pages: its production site AND every preview
@@ -92,7 +93,10 @@ export default {
         });
       }
 
-      const clientIP = request.headers.get("CF-Connecting-IP");
+      //Cloudflare adds CF-Connecting-IP in production, but `wrangler dev`
+      //does not, and the rate limiter throws "invalid key: null" on a null key.
+      //so a missing IP falls back to one shared "local" bucket
+      const clientIP = request.headers.get("CF-Connecting-IP") ?? "local";
 
       const { success } = await env.TCG_RATE_LIMITER.limit({ key: clientIP });
 
@@ -151,7 +155,9 @@ export default {
       //shows the app's error message instead of a confusing CORS error
       if (!result.data) {
         return new Response(
-          JSON.stringify({ error: "The card service did not answer. Try again." }),
+          JSON.stringify({
+            error: "The card service did not answer. Try again.",
+          }),
           {
             status: result.status,
             headers: { "Content-Type": "application/json", ...corsHeaders },

@@ -10,8 +10,12 @@ Live at `https://tcg-proxy.tcg-proxy.workers.dev`.
 
 - [pokemon-finder-react](https://github.com/elpsykongroo14/pokemon-finder-react):
   the Library page and the Pokémon page's cards teaser
-- [pokemon-finder](https://github.com/elpsykongroo14/pokemon-finder): the
-  original vanilla TypeScript app
+- Local development of that app (`localhost:5173`, and `localhost:4173` for
+  its Playwright tests)
+
+The original vanilla app
+([pokemon-finder](https://github.com/elpsykongroo14/pokemon-finder), archived)
+used it too until November 2026; its origin has been removed from the allowlist.
 
 ## What it does, in request order
 
