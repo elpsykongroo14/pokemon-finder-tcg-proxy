@@ -1,0 +1,64 @@
+# One pipeline for the worker.
+#
+#   pull request ──► check (tests + dry-run deploy)
+#   push to main ──► check ──► deploy ──► smoke test production
+#
+# Nothing reaches production without passing `check` on the same commit.
+name: Pipeline
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+# least privilege: this workflow only reads the repository
+permissions:
+  contents: read
+
+# a newer push to the same pull request makes the older run pointless:
+# cancel it. runs on main are never cancelled (they deploy); they queue.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Tests
+        run: npm test
+      - name: Deploy dry run (bundles and lists bindings, uploads nothing)
+        run: npm run deploy:dry-run
+
+  deploy:
+    needs: check
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: prouction
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Deploy
+        run: npm run deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      - name: Smoke test production
+        run: |
+          headers=$(curl --silent --show-error --fail --retry 2 \
+            --dump-header - --output /dev/null \
+            --header "Origin: https://pokemon-finder-react-b8o.pages.dev" \
+            "https://tcg-proxy.tcg-proxy.workers.dev/?q=name:pikachu&pageSize=1")
+          echo "$headers"
+          echo "$headers" | grep -i "^access-control-allow-origin: https://pokemon-finder-react-b8o.pages.dev"
